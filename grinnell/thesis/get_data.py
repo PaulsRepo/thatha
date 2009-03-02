@@ -27,19 +27,17 @@ def get_defs(i):
             f.readline()
             
     for word in f:
-		try:
-	        print word + "..."
-	        word = word.strip()
-	        r = get_definitions(word)
-	        sss = ""
-	        for j in r.keys():
-	            if type(r[j]) == dict_type:
-	               sss += ("%d/%d," % (int(r[j]['upvotes']), int(r[j]['downvotes'])))
-	        out_string = "%s\t%d\t%d\t%d\t%s" % (word, r['count_defs'], r['total_upvotes'], r['total_downvotes'], sss)
-	        print out_string
-	        outf.write(out_string + '\n')
-		except Exception:
-			print "oopsie with " + word + ".... continuing"
+        print word + "..."
+        word = word.strip()
+        r = get_definitions(word)
+        sss = ""
+        for j in r.keys():
+            if type(r[j]) == dict_type:
+               sss += ("%d/%d," % (int(r[j]['upvotes']), int(r[j]['downvotes'])))
+        out_string = "%s\t%d\t%d\t%d\t%s" % (word, r['count_defs'], r['total_upvotes'], r['total_downvotes'], sss)
+        print out_string
+        outf.write(out_string + '\n')
+
         count += 1
         if count % 100 == 0:
             print count, " ", word
