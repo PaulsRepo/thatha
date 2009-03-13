@@ -3,7 +3,7 @@
 #import httplib
 #httplib.HTTPConnection.debuglevel = 1
 import socket
-socket.setdefaulttimeout(2)
+socket.setdefaulttimeout(5)
 
 import urllib2, time
 #data = urllib2.urlopen('http://www.urbandictionary.com/define.php?page=2&term=freedom+fries').read()
