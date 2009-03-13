@@ -41,6 +41,8 @@ def get_defs(i):
             out_string = "%s\tFAILED" % word
             print out_string
         outf.write(out_string + '\n')
+        if count % 5 == 0:
+            outf.flush()
         count += 1
         if count % 100 == 0:
             print count, " ", word
