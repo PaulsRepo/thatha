@@ -23,6 +23,7 @@ def get_defs(i):
     f = open('/home/athanasa/thesis/data/words-%s' % i, 'r')
     lines_in_f = lines_in_file('data/defs-%s' % i)
     outf = open('/home/athanasa/thesis/data/defs-%s' % i, 'a')
+    logf = open('/home/athanasa/thesis/data/logging-%s' % i, 'a')
     
     if lines_in_f != 0:
         for i in xrange(1, lines_in_f +1 ):
@@ -39,15 +40,17 @@ def get_defs(i):
             out_string = "%s\t%d\t%d\t%d\t%s" % (word, r['count_defs'], r['total_upvotes'], r['total_downvotes'], sss)
         except (urllib2.URLError, urllib2.HTTPError):
             out_string = "%s\tFAILED" % word
-            print out_string
+            logf.write(out_string + '\n')
+            logf.flush()
         outf.write(out_string + '\n')
         if count % 5 == 0:
             outf.flush()
         count += 1
         if count % 100 == 0:
-            print count, " ", word, " ", time.strftime('%x %X')
+            logf.write("%d %s %s\n" % (count, word, time.strftime('%x %X')))
+            logf.flush()
         else:
-            print ".",
+            logf.write(".")
             
 if sys.argv[1] in alphabet:
     get_defs(sys.argv[1])
