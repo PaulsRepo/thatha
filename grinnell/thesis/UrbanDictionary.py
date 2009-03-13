@@ -52,7 +52,10 @@ def get_definitions(lemma = 'fagtard'):
                 definition['author'] = author[0]
             else:
                 raise Exception('way too many authors')
-            definition['date'] = xpath_single(defn, "./td[@class='text']/div[@class='greenery']/span[@class='date']/text()").strip()
+            try:
+                definition['date'] = xpath_single(defn, "./td[@class='text']/div[@class='greenery']/span[@class='date']/text()").strip()
+            except Exception:
+                definition['date'] = 'Unknown'
             definition['upvotes'] = 0
             definition['downvotes'] = 0
             dict[defid] = definition
