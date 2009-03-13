@@ -43,6 +43,8 @@ def get_defs(i):
         count += 1
         if count % 100 == 0:
             print count, " ", word
+        else:
+            print ".",
             
 if sys.argv[1] in alphabet:
     get_defs(sys.argv[1])
