@@ -1,7 +1,7 @@
 import mathlan
 
 machines = mathlan.machines
-alphabet = mathlan.alphabets
+alphabet = mathlan.alphabet
 
 import os
 for i in alphabet:
