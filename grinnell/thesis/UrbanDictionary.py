@@ -19,7 +19,7 @@ DEBUG = 1
 def xpath_single(xxxx, string):
     r = xxxx.xpath(string)
     if len(r) != 1:
-        raise Exception("invalid xpath result")
+        raise Exception("invalid xpath result " + repr(r))
     else:
         return r[0]
 
