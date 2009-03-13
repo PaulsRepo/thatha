@@ -114,7 +114,7 @@ def get_all_words(character = 'A'):
     for i in xrange(1, pages + 1):
         if i != 1:
             doc = get_all_words_page(i)
-        for j in xpath(doc, "//table[@id='columnist']/tr/td/ul/li//a/text()"):
+        for j in xpath(doc, "//table[@id='columnist']/tr/td/ul/li//a[starts-with(@href, '/define.php?term=')]/text()"):
             yield j
 
 def get_all_data():
