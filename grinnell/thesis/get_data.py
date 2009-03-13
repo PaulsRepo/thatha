@@ -20,9 +20,9 @@ def get_defs(i):
     dict_type = type({})
 
     print "letter:"+i
-    f = open('data/words-%s' % i, 'r')
+    f = open('/home/athanasa/thesis/data/words-%s' % i, 'r')
     lines_in_f = lines_in_file('data/defs-%s' % i)
-    outf = open('data/defs-%s' % i, 'a')
+    outf = open('/home/athanasa/thesis/data/defs-%s' % i, 'a')
     
     if lines_in_f != 0:
         for i in xrange(1, lines_in_f +1 ):
