@@ -6,4 +6,4 @@ import os
 for i in alphabet:
         m = machines.pop()
         print "running %s on %s" %(i,m)
-        os.spawnl(os.P_NOWAIT, '/usr/bin/ssh', 'ssh', m, '"python ~/thesis/get_data.py %s > ~/thesis/data/logging-%s &2>1 &"' % (i,i))
+        os.spawnl(os.P_NOWAIT, '/usr/bin/ssh', 'ssh', m, '"python /home/athanasa/thesis/get_data.py %s > /home/athanasa/thesis/data/logging-%s &2>1 &"' % (i,i))
