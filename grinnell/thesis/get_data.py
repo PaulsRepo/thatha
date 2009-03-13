@@ -45,7 +45,7 @@ def get_defs(i):
             outf.flush()
         count += 1
         if count % 100 == 0:
-            print count, " ", word, " ", time.today()
+            print count, " ", word, " ", time.strftime('%x %X')
         else:
             print ".",
             
