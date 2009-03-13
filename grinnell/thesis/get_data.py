@@ -2,7 +2,7 @@ import sys
 import os
 from UrbanDictionary import *
 import urllib2
-
+import datetime
 alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 def lines_in_file(x):
@@ -45,7 +45,7 @@ def get_defs(i):
             outf.flush()
         count += 1
         if count % 100 == 0:
-            print count, " ", word
+            print count, " ", word, " ", datetime.today()
         else:
             print ".",
             
