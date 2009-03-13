@@ -1,6 +1,7 @@
 import sys
 import os
 from UrbanDictionary import *
+import urllib2
 
 alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
@@ -36,9 +37,9 @@ def get_defs(i):
                 if type(r[j]) == dict_type:
                     sss += ("%d/%d," % (int(r[j]['upvotes']), int(r[j]['downvotes'])))
             out_string = "%s\t%d\t%d\t%d\t%s" % (word, r['count_defs'], r['total_upvotes'], r['total_downvotes'], sss)
-        except:
-            sss = "%s\tFAILED" % word
-            print "%s FAILED" % word
+        except (urllib2.URLError, urllib2.HTTPError):
+            out_string = "%s\tFAILED" % word
+            print out_string
         outf.write(out_string + '\n')
         count += 1
         if count % 100 == 0:
