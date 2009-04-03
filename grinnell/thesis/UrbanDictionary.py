@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 # the order of the stuff in the array changes
 regex = re.compile('Uncacheable.thumbs_update\(\{' +
@@ -11,6 +12,7 @@ regex = re.compile('Uncacheable.thumbs_update\(\{' +
                     
 import Browser
 
+import codecs
 from urllib import urlencode
 from StringIO import StringIO
 from lxml import etree
@@ -61,8 +63,9 @@ def get_definitions(lemma = 'fagtard'):
             dict[defid] = definition
 
         # http://www.urbandictionary.com/uncacheable.php?ids=1994953,123
-        
-    doc = etree.parse(StringIO(get_definitions_page(1)), parser)
+
+    stringio = StringIO(get_definitions_page(1))
+    doc = etree.parse(stringio, parser)
     pages = xpath(doc, "//div[@id='paginator']/div/a[position() = last() - 1]/text()")
     if len(pages) == 0:
         pages = 1
@@ -108,7 +111,9 @@ def get_all_words(character = 'A'):
         params = {}
         params['character'] = character
         params['page'] = page
-        doc = etree.parse(StringIO(Browser.fetch('http://www.urbandictionary.com/browse.php?' + urlencode(params))), parser)
+        text = Browser.fetch('http://www.urbandictionary.com/browse.php?' + urlencode(params))
+        stringio = StringIO(text)
+        doc = etree.parse(stringio, parser)
         return doc
     
     doc = get_all_words_page(1)
@@ -118,16 +123,24 @@ def get_all_words(character = 'A'):
         if i != 1:
             doc = get_all_words_page(i)
         for j in xpath(doc, "//table[@id='columnist']/tr/td/ul/li//a[starts-with(@href, '/define.php?term=')]/text()"):
-            yield j
+            # Ignore stuff that's not unicode
+            Bad = False
+            for m in j:
+                if ord(m) > 128:
+                    print "Bad Word"
+                    print j
+                    Bad = True
+            if not Bad:
+                yield j
 
 def get_all_data():
     alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     count = 0
     for i in alphabet:
         print "Letter:" + i
-        f = open('data/words-%s' % i, 'w')
+        f = codecs.open('data/words-%s' % i, 'w', 'UTF-8')
         for j in get_all_words(i):
-            f.write(j.encode('utf-8') + '\n')
+            f.write(j + '\n')
             count += 1
             if count % 100 == 0:
                 print count
