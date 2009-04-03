@@ -1,146 +1,148 @@
 # coding=utf-8
 import re
-# the order of the stuff in the array changes
-regex = re.compile('Uncacheable.thumbs_update\(\{' +
-                    '((' +
-                    '"current_vote":""|' +
-                    '"thumbs_up":(?P<up>[0-9]*)|' +
-                    '"id":(?P<id>[0-9]*)|' +
-                    '"thumbs_down":(?P<down>[0-9]*)' +
-                    '),?)*' +
-                    '\}\);')
-                    
 import Browser
-
 import codecs
+
 from urllib import urlencode
 from StringIO import StringIO
+
 from lxml import etree
 parser = etree.HTMLParser()
-DEBUG = 1
-def xpath_single(xxxx, string):
-    r = xxxx.xpath(string)
-    if len(r) != 1:
-        raise Exception("invalid xpath result " + repr(r))
-    else:
-        return r[0]
 
-def xpath(xxxx, string):
-    return xxxx.xpath(string)
+VOTES_PLACEHOLDER = -1337
 
-def get_definitions(lemma = 'fagtard'):
-    def get_definitions_page(page = 1):
-        q = {}
-        q['page'] = page
-        q['term'] = lemma
-        result = Browser.fetch('http://www.urbandictionary.com/define.php?' + urlencode(q))
-        #TODO
-        result = result.replace("<br>", "").replace("<br />", "").replace("<br/>", "")
-        return result
+def lemma_page(lemma, page):
+    """Given a lemma and page it returns the DOM for the page-th page of definitions for lemma"""
+    q = {}
+    q['page'] = page
+    q['term'] = lemma
+    result = Browser.fetch('http://www.urbandictionary.com/define.php?' + urlencode(q))
+    # Transform all "br"s into newlines
+    result = re.compile("\<br ?/?\>").sub("\n", result)
+    return etree.parse(StringIO(result), parser)
 
-    def get_defdetails_from_doc(doc, dict):
-#        definition_count = xpath(doc, "count(//td[@id='content']/table[@id='entries']/tr/td[@class='index'])")
-        ids = [ x.replace('tools_', '')
-                            for x in xpath(doc, "//td[@id='content']/table[@id='entries']/tr/td[@class='tools']/attribute::id") ]
-        for defid in ids:
-            definition = {}
-            definition['id'] = defid
-            defn = xpath_single(doc, "//td[@id='content']/table[@id='entries']/tr/td[@class='tools' and @id='tools_%s']/../following-sibling::tr[position() = 1]" % defid)
-            definition['tags'] = xpath(defn, "./td[@class='text']/div[@class='greenery']/a[starts-with(@href, '/define.php?term=')]/text()")
-            author = xpath(defn, "./td[@class='text']/div[@class='greenery']/a[starts-with(@href, '/author.php?author=')]/text()")
-            if len(author) == 0:
-                definition['author'] = "anonymous"
-            elif len(author) == 1:
-                definition['author'] = author[0]
-            else:
-                raise Exception('way too many authors')
-            try:
-                definition['date'] = xpath_single(defn, "./td[@class='text']/div[@class='greenery']/span[@class='date']/text()").strip()
-            except Exception:
-                definition['date'] = 'Unknown'
-            definition['upvotes'] = 0
-            definition['downvotes'] = 0
-            dict[defid] = definition
+def lemma_pages(lemma):
+    page = lemma_page(lemma, 1)
+    pages = int(page.xpath("//div[@id='paginator']/div/a[position() = last() - 1]/text()")[0])
+    return pages
+    
+def statistics_for_lemma(lemma, PER_DEFINITION_DETAILS = False, PER_DEFINITION_DETAILS_EXPANDED = False):
+    """Given a lemma it returns ???"""
 
-        # http://www.urbandictionary.com/uncacheable.php?ids=1994953,123
-
-    stringio = StringIO(get_definitions_page(1))
-    doc = etree.parse(stringio, parser)
-    pages = xpath(doc, "//div[@id='paginator']/div/a[position() = last() - 1]/text()")
-    if len(pages) == 0:
-        pages = 1
-    elif len(pages) == 1:
-        pages = int(pages[0])
-    else:
-        raise Exception('invalid xpath result')
+    # PER_DEFINITION_DETAILS_EXPANDED presupposes PER_DEFINITION_DETAILS
+    if PER_DEFINITION_DETAILS_EXPANDED:
+        PER_DEFINITION_DETAILS = True
         
-    tags = xpath(doc, "//td[@id='content']//span[@id='tags']/a/text()")
-    d = {}
-    get_defdetails_from_doc(doc, d)
+    result = {}
+    def_ids = []
     
-    for i in xrange(2, pages + 1):
-        doc = etree.parse(StringIO(get_definitions_page(i)), parser)
-        get_defdetails_from_doc(doc, d)
-
-    ids = d.keys()
-    ajaxdata = Browser.fetch('http://www.urbandictionary.com/uncacheable.php?ids=' + ','.join(ids))
-
-    total_upvotes = 0
-    total_downvotes = 0
-    
-    for x in regex.finditer(ajaxdata):
-        defid = x.group('id')
-        upvotes = x.group('up')
-        downvotes = x.group('down')
-        d[defid]['upvotes'] = upvotes
-        d[defid]['downvotes'] = downvotes
-        total_upvotes += int(upvotes)
-        total_downvotes += int(downvotes)
-
-    d['count_defs'] = len(d)
-    d['tags'] = tags
-    d['total_upvotes'] = total_upvotes
-    d['total_downvotes'] = total_downvotes
-    d['total_votes'] = total_upvotes + total_downvotes
-    
-    
-    return d
-
-def get_all_words(character = 'A'):
-    def get_all_words_page(page):
-        params = {}
-        params['character'] = character
-        params['page'] = page
-        text = Browser.fetch('http://www.urbandictionary.com/browse.php?' + urlencode(params))
-        stringio = StringIO(text)
-        doc = etree.parse(stringio, parser)
-        return doc
-    
-    doc = get_all_words_page(1)
-    pages = int(xpath_single(doc, "//div[@id='paginator']/div/a[position() = last() - 1]/text()"))
-    
+    pages = lemma_pages(lemma)
     for i in xrange(1, pages + 1):
-        if i != 1:
-            doc = get_all_words_page(i)
-        for j in xpath(doc, "//table[@id='columnist']/tr/td/ul/li//a[starts-with(@href, '/define.php?term=')]/text()"):
-            # Ignore stuff that's not unicode
-            Bad = False
-            for m in j:
-                if ord(m) > 128:
-                    print "Bad Word"
-                    print j
-                    Bad = True
-            if not Bad:
-                yield j
+        doc = lemma_page(lemma, i)
+        # Get all the ids for the definitions
+        def_ids_in_page = [ x.replace('tools_', '')
+                            for x in doc.xpath("//td[@id='content']/table[@id='entries']/tr/td[@class='tools']/attribute::id") ]
+        def_ids += def_ids_in_page
 
-def get_all_data():
-    alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    count = 0
-    for i in alphabet:
-        print "Letter:" + i
-        f = codecs.open('data/words-%s' % i, 'w', 'UTF-8')
-        for j in get_all_words(i):
-            f.write(j + '\n')
-            count += 1
-            if count % 100 == 0:
-                print count
+        if PER_DEFINITION_DETAILS:
+            for def_id in def_ids_in_page:
+                definition = {}
+
+                if PER_DEFINITION_DETAILS_EXPANDED:
+                    # Pick up the DOM only for the definition
+                    definition_dom = doc.xpath("//td[@id='content']/table[@id='entries']/tr/td[@class='tools' and @id='tools_%s']/../following-sibling::tr[position() = 1]" % def_id)[0]
+            
+                    # Determine tags
+                    definition['tags'] = definition_dom.xpath("./td[@class='text']/div[@class='greenery']/a[starts-with(@href, '/define.php?term=')]/text()")
+            
+                    # Determine author
+                    author = definition_dom.xpath("./td[@class='text']/div[@class='greenery']/a[starts-with(@href, '/author.php?author=')]/text()")
+                    if len(author) == 0:
+                        author = "anonymous"
+                    else:
+                        author = author[0]
+                    definition['author'] = author
+            
+                    # Determine date, if possible
+                    date = definition_dom.xpath("./td[@class='text']/div[@class='greenery']/span[@class='date']/text()")
+                    if len(date) == 0:
+                        date = "unknown"
+                    else:
+                        date = date[0].strip()
+                    definition['date'] = date
+
+                definition['votes_up'] = VOTES_PLACEHOLDER
+                definition['votes_down'] = VOTES_PLACEHOLDER
+            
+                result["defn_" + def_id] = definition
+        
+    # After we are done with fetching all the definition ids, fetch the votes (altogether)
+    votes_regex = re.compile('Uncacheable.thumbs_update\(\{' +
+                        '((' +
+                        '"current_vote":""|' +
+                        '"thumbs_up":(?P<up>[0-9]*)|' +
+                        '"id":(?P<id>[0-9]*)|' +
+                        '"thumbs_down":(?P<down>[0-9]*)' +
+                        '),?)*' +
+                        '\}\);')
+
+    votes = Browser.fetch('http://www.urbandictionary.com/uncacheable.php?ids=' + ','.join(def_ids))
+
+    total_votes_up = 0
+    total_votes_down = 0
+    
+    for x in votes_regex.finditer(votes):
+        def_id = x.group('id')
+        votes_up = int(x.group('up'))
+        votes_down = int(x.group('down'))
+        if PER_DEFINITION_DETAILS:
+            result["defn_" + def_id]['votes_up'] = votes_up
+            result["defn_" + def_id]['votes_down'] = votes_down
+        total_votes_up += votes_up
+        total_votes_down += votes_down
+
+    result['count_defs'] = len(def_ids)
+    result['tags'] = lemma_page(lemma, 1).xpath("//td[@id='content']//span[@id='tags']/a/text()")
+    result['total_votes_up'] = total_votes_up
+    result['total_votes_down'] = total_votes_down
+    result['total_votes'] = total_votes_up + total_votes_down
+
+    return result
+
+def lemma_pretty(lemma, lemma_info):
+    print "===%s===" % lemma.upper()
+    print "\tvotes: %4d\tup: %4d\tdown: %4d" % (lemma_info['total_votes'], lemma_info['total_votes_up'], lemma_info['total_votes_down'])
+    print "\t defs: %4d" % (lemma_info['count_defs'])
+    
+def string_invalid(string):
+    """A string is valid if and only if it contains only ASCII letters"""
+    for char in string:
+        if ord(char) > 128:
+            return True
+    return False
+
+def words_page(character, page):
+    params = {}
+    params['character'] = character
+    params['page'] = page
+    return etree.parse(StringIO(Browser.fetch('http://www.urbandictionary.com/browse.php?' + urlencode(params))), parser)
+
+def words_pages(character):
+    page = words_page(character, 1)
+    return int(page.xpath("//div[@id='paginator']/div/a[position() = last() - 1]/text()")[0])
+
+def words_for_character(character):
+    """Given a character it returns all the words in UrbanDictionary that start with this character via a generator"""    
+    pages = words_pages(character)
+    for i in xrange(1, pages + 1):
+        page = words_page(character, i)
+        for word in page.xpath("//table[@id='columnist']/tr/td/ul/li//a[starts-with(@href, '/define.php?term=')]/text()"):
+            if not string_invalid(word):
+                yield word
+
+def words():
+    """Returns all the words in UrbanDictionary. Use with caution."""
+    alphabet = [ chr(i) for i in range(65, 65 + 26) ]
+    for letter in alphabet:
+        for word in all_words_for_character(letter):
+            yield word
