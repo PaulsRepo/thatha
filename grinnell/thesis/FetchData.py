@@ -92,7 +92,7 @@ def stats_for_letter_to_cache(letter):
             percentage = (float(count) / total_words) * 100
             logging.write("Processed %6d out of %6d || letter: %s || %2.2f || %s || %s\n" % (count, total_words, letter, percentage, time.strftime('%x %X'), word))
             logging.flush()
-    logging.write("Letter %s || DONE\n")
+    logging.write("Letter %s || DONE\n" % letter)
     logging.flush()
 
 if len(sys.argv) == 2 and sys.argv[1] in alphabet:
