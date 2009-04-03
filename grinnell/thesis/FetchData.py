@@ -40,7 +40,7 @@ def stop_remote():
 
 def start_remote():
     import mathlan
-    mathlan.execute([ "cd thesis && python FetchData.py %s &" % (i,i) for i in alphabet ])
+    mathlan.execute([ "cd thesis && python FetchData.py %s &" % (i) for i in alphabet ])
 
 
 def file_lines(filename):
