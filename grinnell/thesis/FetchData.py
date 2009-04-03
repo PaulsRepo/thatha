@@ -40,8 +40,7 @@ def stop_remote():
 
 def start_remote():
     import mathlan
-#    mathlan.execute
-#    'python /home/athanasa/thesis/get_data.py %s > /home/athanasa/thesis/data/logging-%s 2>&1 &' % (i,i)
+    mathlan.execute([ "cd thesis && python FetchData.py %s &" % (i,i) for i in alphabet ])
 
 
 def file_lines(filename):
