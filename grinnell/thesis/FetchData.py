@@ -1,6 +1,8 @@
 import sys
 import codecs
 import UrbanDictionary
+import time
+import urllib2
 
 alphabet = [ chr(i) for i in range(65, 65 + 26) ]    
 
@@ -26,10 +28,11 @@ def words_to_cache():
         print "Letter: %s" % letter
         f = codecs.open('data/words-%s' % letter, 'w', 'UTF-8')
         for j in UrbanDictionary.words_for_character(letter):
-            f.write(j + '\n')
-            count += 1
-            if count % 100 == 0:
-                print count
+            if not j.endswith("..."):
+                f.write(j + '\n')
+                count += 1
+                if count % 100 == 0:
+                    print count
                 
 def stop_remote():
     import mathlan
@@ -41,9 +44,9 @@ def start_remote():
 #    'python /home/athanasa/thesis/get_data.py %s > /home/athanasa/thesis/data/logging-%s 2>&1 &' % (i,i)
 
 
-def lines_in_file(x):
+def file_lines(filename):
     try:
-        f = open(x, 'r')
+        f = open(filename, 'r')
         count = 0
         for x in f: count += 1
         f.close()
@@ -51,42 +54,44 @@ def lines_in_file(x):
     except Exception:
         return 0
     
-def definitions_for_letter(i):
-    count = 0
-    dict_type = type({})
-
-    print "letter:"+i
-    f = open('/home/athanasa/thesis/data/words-%s' % i, 'r')
-    lines_in_f = lines_in_file('data/defs-%s' % i)
-    outf = open('/home/athanasa/thesis/data/defs-%s' % i, 'a')
-    logf = open('/home/athanasa/thesis/data/logging-%s' % i, 'a')
+def stats_for_letter_to_cache(letter):
+    total_words = file_lines('data/words-%s' % letter)
     
-    if lines_in_f != 0:
-        for i in xrange(1, lines_in_f +1 ):
-            f.readline()
-            
-    for word in f:
+    print "Letter: %s" % letter
+    
+    words = codecs.open('data/words-%s' % letter, 'r', 'UTF-8')
+    stats = codecs.open('data/stats-%s' % letter, 'a', 'UTF-8')
+    logging = open('data/logging-%s' % letter, 'a')
+    
+    already_statted = file_lines('data/stats-%s' % letter)
+    
+    if already_statted != 0:
+        # Skip already_statted lines from words since they are already processed
+        for i in xrange(1, already_statted + 1):
+            words.readline()
+        logging.write("Skipped %d lines since they are already processed\n" % already_statted)
+    else:
+        # We are just beginning this file, write the header
+        stats.write("lemma\tdefinitions\tvotes_up\tvotes_down\tvotes_total\n")
+    
+    count = already_statted
+    
+    for word in words:
         word = word.strip()
+        count += 1 
         try:
-            r = get_definitions(word)
-            sss = ""
-            for j in r.keys():
-                if type(r[j]) == dict_type:
-                    sss += ("%d/%d," % (int(r[j]['upvotes']), int(r[j]['downvotes'])))
-            out_string = "%s\t%d\t%d\t%d\t%s" % (word, r['count_defs'], r['total_upvotes'], r['total_downvotes'], sss)
-        except (urllib2.URLError, urllib2.HTTPError):
-            out_string = "%s\tFAILED" % word
-            logf.write(out_string + '\n')
-            logf.flush()
-        outf.write(out_string + '\n')
-        if count % 5 == 0:
-            outf.flush()
-        count += 1
-        if count % 100 == 0:
-            logf.write("%d %s %s\n" % (count, word, time.strftime('%x %X')))
-            logf.flush()
-        else:
-            logf.write(".")
+            info = UrbanDictionary.statistics_for_lemma(word)
+            out_string = "%s\t%d\t%d\t%d\t%d\n" % (word, info['count_defs'], info['total_votes_up'], info['total_votes_down'], info['total_votes'])
+            stats.write(out_string)
+        except urllib2.URLError, urllib2.HTTPError:
+            logging.write("FAILED: %s\n" % word)
+            logging.flush()
+            stats.write("%s\tFAILED\n" % word)
+        
+        if count % 10 == 0:
+            stats.flush()
+            logging.write("Processed %6d out of %6d || letter: %s || %s || %s || %2.2f\n" % (count, total_words, letter, word, time.strftime('%x %X'), count / total_words))
+            logging.flush()
 
 if len(sys.argv) == 2 and sys.argv[1] in alphabet:
-    definitions_for_letter(sys.argv[1])
+    stats_for_letter_to_cache(sys.argv[1])

@@ -1,4 +1,3 @@
-# coding=utf-8
 import re
 import Browser
 import codecs
@@ -11,7 +10,74 @@ parser = etree.HTMLParser()
 
 VOTES_PLACEHOLDER = -1337
 
+def string_invalid(string):
+    """A string is valid if and only if it contains only ASCII letters"""
+    for char in string:
+        if ord(char) > 128:
+            return True
+    return False
+
 def lemma_page(lemma, page):
+    """Given a lemma and page it returns the DOM for the page-th page of definitions for lemma"""
+    q = {}
+    q['page'] = page
+    q['term'] = lemma
+    result = Browser.fetch('http://www.urbandictionary.com/iphone/search?' + urlencode(q))
+    # Transform all "br"s into newlines
+    result = re.compile("\<br ?/?\>").sub("\n", result)
+    return etree.parse(StringIO(result), parser)
+
+def lemma_pages(lemma):
+    page = lemma_page(lemma, 1)
+    info = page.xpath("//div[@id='which_page']/text()")[0].strip('\n').split(' ')
+    defs_on_one_page = int(info[1])
+    all_defs = int(info[3])
+    pages = int(all_defs / defs_on_one_page + 1)
+    return pages
+
+def statistics_for_lemma(lemma):
+    """Given a lemma it returns ???"""
+
+    result = {}
+    def_ids = []
+
+    pages = lemma_pages(lemma)
+    for i in xrange(1, pages + 1):
+        doc = lemma_page(lemma, i)
+        # Get all the ids for the definitions
+        def_ids_in_page = [ x.replace('entry_', '')
+                            for x in doc.xpath("//div[@id='list_items']/div[@class='list_item']/div[@class='entry']/attribute::id") ]
+        def_ids += def_ids_in_page
+
+    # After we are done with fetching all the definition ids, fetch the votes (altogether)
+    votes_regex = re.compile('Uncacheable.thumbs_update\(\{' +
+                        '((' +
+                        '"current_vote":""|' +
+                        '"thumbs_up":(?P<up>[0-9]*)|' +
+                        '"id":(?P<id>[0-9]*)|' +
+                        '"thumbs_down":(?P<down>[0-9]*)' +
+                        '),?)*' +
+                        '\}\);')
+
+    votes = Browser.fetch('http://www.urbandictionary.com/uncacheable.php?ids=' + ','.join(def_ids))
+
+    total_votes_up = 0
+    total_votes_down = 0
+
+    for x in votes_regex.finditer(votes):
+        def_id = x.group('id')
+        votes_up = int(x.group('up'))
+        votes_down = int(x.group('down'))
+        total_votes_up += votes_up
+        total_votes_down += votes_down
+
+    result['count_defs'] = len(def_ids)
+    result['total_votes_up'] = total_votes_up
+    result['total_votes_down'] = total_votes_down
+    result['total_votes'] = total_votes_up + total_votes_down
+
+    return result
+def lemma_page_expanded(lemma, page):
     """Given a lemma and page it returns the DOM for the page-th page of definitions for lemma"""
     q = {}
     q['page'] = page
@@ -21,12 +87,12 @@ def lemma_page(lemma, page):
     result = re.compile("\<br ?/?\>").sub("\n", result)
     return etree.parse(StringIO(result), parser)
 
-def lemma_pages(lemma):
+def lemma_pages_expanded(lemma):
     page = lemma_page(lemma, 1)
     pages = int(page.xpath("//div[@id='paginator']/div/a[position() = last() - 1]/text()")[0])
     return pages
     
-def statistics_for_lemma(lemma, PER_DEFINITION_DETAILS = False, PER_DEFINITION_DETAILS_EXPANDED = False):
+def statistics_for_lemma_expanded(lemma, PER_DEFINITION_DETAILS = False, PER_DEFINITION_DETAILS_EXPANDED = False):
     """Given a lemma it returns ???"""
 
     # PER_DEFINITION_DETAILS_EXPANDED presupposes PER_DEFINITION_DETAILS
@@ -108,18 +174,6 @@ def statistics_for_lemma(lemma, PER_DEFINITION_DETAILS = False, PER_DEFINITION_D
     result['total_votes'] = total_votes_up + total_votes_down
 
     return result
-
-def lemma_pretty(lemma, lemma_info):
-    print "===%s===" % lemma.upper()
-    print "\tvotes: %4d\tup: %4d\tdown: %4d" % (lemma_info['total_votes'], lemma_info['total_votes_up'], lemma_info['total_votes_down'])
-    print "\t defs: %4d" % (lemma_info['count_defs'])
-    
-def string_invalid(string):
-    """A string is valid if and only if it contains only ASCII letters"""
-    for char in string:
-        if ord(char) > 128:
-            return True
-    return False
 
 def words_page(character, page):
     params = {}

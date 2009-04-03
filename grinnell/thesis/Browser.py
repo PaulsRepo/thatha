@@ -5,12 +5,12 @@ import time
 
 def fetch(target):
     try:
-        return urllib2.urlopen(target).read().decode('utf-8')
+        return urllib2.urlopen(target).read()
     except (urllib2.HTTPError, urllib2.URLError):
         print "Retrying..."
         time.sleep(2)
         try:
-            return urllib2.urlopen(target).read().decode('utf-8')
+            return urllib2.urlopen(target).read()
         except (urllib2.HTTPError, urllib2.URLError):
             print "Retrying... (for the last time)"
             time.sleep(2)
