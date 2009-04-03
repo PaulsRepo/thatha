@@ -188,11 +188,14 @@ def words_pages(character):
 def words_for_character(character):
     """Given a character it returns all the words in UrbanDictionary that start with this character via a generator"""    
     pages = words_pages(character)
+    previous_word = ""
     for i in xrange(1, pages + 1):
         page = words_page(character, i)
         for word in page.xpath("//table[@id='columnist']/tr/td/ul/li//a[starts-with(@href, '/define.php?term=')]/text()"):
             if not string_invalid(word):
-                yield word
+                if word != previous_word:
+                    previous_word = word
+                    yield word.lower()
 
 def words():
     """Returns all the words in UrbanDictionary. Use with caution."""
