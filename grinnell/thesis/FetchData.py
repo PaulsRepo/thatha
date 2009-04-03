@@ -82,7 +82,7 @@ def stats_for_letter_to_cache(letter):
             info = UrbanDictionary.statistics_for_lemma(word)
             out_string = "%s\t%d\t%d\t%d\t%d\n" % (word, info['count_defs'], info['total_votes_up'], info['total_votes_down'], info['total_votes'])
             stats.write(out_string)
-        except urllib2.URLError, urllib2.HTTPError:
+        except urllib2.URLError, urllib2.HTTPError, Exception:
             logging.write("FAILED: %s\n" % word)
             logging.flush()
             stats.write("%s\tFAILED\n" % word)
