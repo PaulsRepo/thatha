@@ -13,7 +13,7 @@ for file in os.listdir('data/'):
 		last_line = ""
 		for line in f:
 			line = line.lower()
-			if last_line != line:
+			if last_line != line and (line.find("FAILED") >= 0):
 				if count % 1000 == 0:
 					if count != 0: print footer
 					print header
