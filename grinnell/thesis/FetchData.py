@@ -3,6 +3,7 @@ import codecs
 import UrbanDictionary
 import time
 import urllib2
+import commands
 
 alphabet = [ chr(i) for i in range(65, 65 + 26) ]    
 
@@ -95,5 +96,13 @@ def stats_for_letter_to_cache(letter):
     logging.write("Letter %s || DONE\n" % letter)
     logging.flush()
 
-if len(sys.argv) == 2 and sys.argv[1] in alphabet:
-    stats_for_letter_to_cache(sys.argv[1])
+if len(sys.argv) == 2:
+	if sys.argv[1] in alphabet:
+		stats_for_letter_to_cache(sys.argv[1])
+	elif sys.argv[1] == "failed":
+		words = commands.getoutput("grep -h FAILED data/stats-* | cut -f1").split("\n")
+		f = open('data/words-FAILED', 'w')
+		for word in words:
+			f.write("%s\n" % word)
+		f.close()
+		stats_for_letter_to_cache("FAILED")
