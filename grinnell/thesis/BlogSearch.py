@@ -6,7 +6,7 @@ import simplejson
 from urllib import urlencode
 from StringIO import StringIO
 
-APIKEY = open('/home/athanasa/google_api_key', 'r').read().strip()
+APIKEY = open('/Users/thatha/google_api_key', 'r').read().strip()
 
 def search(query, **options):
 	options.update({
