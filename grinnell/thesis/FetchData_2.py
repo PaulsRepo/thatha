@@ -48,10 +48,10 @@ def google_for_letter_to_cache(letter):
     for word in words:
         word = word.strip()
         count += 1 
-				try:
-		        info = BlogSearch.count(word)
-		        out_string = "%s\t%d\n" % (word, info)
-		        stats.write(out_string)
+        try:
+            info = BlogSearch.count(word)
+            out_string = "%s\t%d\n" % (word, info)
+            stats.write(out_string)
         except:
             logging.write("FAILED: %s\n" % word)
             logging.flush()
