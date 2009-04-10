@@ -6,12 +6,13 @@ import simplejson
 from urllib import urlencode
 from StringIO import StringIO
 
-# from lxml import etree
-# sparser = etree.HTMLParser()
+APIKEY = open('/home/athanasa/google_api_key', 'r').read().strip()
 
 def search(query, **options):
 	options.update({
 		'v': '1.0',
+		# http://code.google.com/apis/ajaxsearch/key.html
+		'key': APIKEY,
 		'q': '"%s"' % (query)
 	})
 	result = simplejson.JSONDecoder().decode(Browser.fetch('http://ajax.googleapis.com/ajax/services/search/blogs?' + urlencode(options)))
