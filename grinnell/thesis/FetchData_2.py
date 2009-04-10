@@ -2,6 +2,7 @@ import sys
 import codecs
 import time
 import BlogSearch
+import os
 
 alphabet = [ chr(i) for i in range(65, 65 + 26) ]    
 
