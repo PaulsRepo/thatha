@@ -2,6 +2,7 @@ import re
 import Browser
 import codecs
 import simplejson
+import os
 
 from urllib import urlencode
 from StringIO import StringIO
