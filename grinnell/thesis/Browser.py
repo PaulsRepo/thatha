@@ -8,6 +8,7 @@ requests_time = time.time()
 requests_threshold = 3 # requests / second (peaked at 6)
 
 def fetch(target):
+	  print (requests_count / requests_time)
     if (requests_count / requests_time) > requests_threshold:
         print "Slowing down..."
         time.sleep(1)
