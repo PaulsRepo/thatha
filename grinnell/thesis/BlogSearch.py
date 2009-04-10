@@ -1,28 +1,22 @@
 import re
 import Browser
 import codecs
+import simplejson
 
 from urllib import urlencode
 from StringIO import StringIO
 
-from lxml import etree
-parser = etree.HTMLParser()
+# from lxml import etree
+# sparser = etree.HTMLParser()
 
-def term_page(term, page):
-    q = {}
-    q['ie'] = 'UTF-8'
-    q['start'] = page * 10
-    q['q'] = term
-    result = Browser.fetch('http://blogsearch.google.com/blogsearch?' + urlencode(q))
-    return etree.parse(StringIO(result), parser)
+def search(query, **options):
+	options.update({
+		'v': '1.0',
+		'q': '"%s"' % (query)
+	})
+	result = simplejson.JSONDecoder().decode(Browser.fetch('http://ajax.googleapis.com/ajax/services/search/blogs?' + urlencode(options)))
+	return result['responseData']
 
-def term_pages(term):
-    page = term_page(term, 0)
-    return int(page.xpath("//div[@id='navbar']/table/tr/td/a/text()")[-2])
-
-
-def hits(phrase):
-    # http://blogsearch.google.com/blogsearch?q=test
-    return false
-    
-print term_pages('fagtard')
+def count(query):
+	return int(search(query)['cursor']['estimatedResultCount'])
+	

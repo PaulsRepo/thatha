@@ -53,7 +53,7 @@ def file_lines(filename):
         return count
     except Exception:
         return 0
-    
+
 def stats_for_letter_to_cache(letter):
     total_words = file_lines('data/words-%s' % letter)
     
