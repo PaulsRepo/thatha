@@ -21,7 +21,7 @@ def stop_remote():
 
 def start_remote():
     import mathlan
-    mathlan.execute([ "cd thesis && python FetchData.py %s &" % (i) for i in alphabet ])
+    mathlan.execute([ "cd thesis && python FetchData_2.py %s &" % (i) for i in alphabet ])
 
 def google_for_letter_to_cache(letter):
     total_words = file_lines('data/words-%s' % letter)
