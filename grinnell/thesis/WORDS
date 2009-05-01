@@ -1,0 +1,37 @@
+time
+think
+something
+
+> s5 = SLANG -racial -anatomy -sex +"milf"
+hella
+hyphy
+bromance
+emo
+milf
+chav
+crunk
+shizzle
+fucktard
+juggalo
+moonbat
+feminazi
+crip
+
+(These are the most popular words based on UrbanDictionary + Google BlogSearch data)
+
+If possible, it'd be nice to have the following:
+> plurals(s5) + s11
+chavs
+shizzles
+fucktards
+juggalos
+moonbats
+feminazis
+crips
+
+metrosexual
+meh
+noob
+pwn
+pwnd
+
